@@ -1,0 +1,10 @@
+abc_xyz,depo_bolgesi,raf_seviyesi,oncelik,aciklama
+AX,Altın Bölge,Bel hizası,1,Yüksek ve düzenli talep: sevkiyat rampasına en yakın ve ergonomik göz
+AY,Altın Bölge,Bel hizası,2,Yüksek ama dalgalı talep: rampaya yakın ve stok tamponu artırılmalı
+AZ,Ön Bölge (Esnek),Bel / omuz hizası,3,Yüksek ama düzensiz (kampanya) talep: esnek ve kolay yeniden yerleştirilebilir göz
+BX,Orta Bölge,Omuz hizası,4,Orta düzey düzenli talep
+BY,Orta Bölge,Omuz hizası,5,Orta düzey dalgalı talep
+BZ,Orta Bölge,Diz hizası,6,Orta düzey düzensiz talep
+CX,Arka Bölge,Üst raf,7,Düşük ama düzenli talep
+CY,Arka Bölge,Üst raf,8,Düşük ve dalgalı talep
+CZ,Arka Bölge,Üst raf / yedek alan,9,Düşük ve düzensiz talep: çeşit azaltma adayı

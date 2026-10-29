@@ -1,0 +1,33 @@
+version: 2
+
+sources:
+  - name: nova
+    description: >
+      NovaPerakende ham verisi (şu an test verisi: scripts/generate_nova_test_data.py).
+      CSV dosyaları DuckDB tarafından doğrudan okunur; tüm kolonlar metin (varchar) olarak
+      alınır, tip dönüşümü staging katmanında yapılır.
+    meta:
+      external_location: "read_csv('../data/raw/{name}.csv', header = true, all_varchar = true)"
+    tables:
+      - name: perakende_satis
+        description: Satış fişi satırları (her satır bir ürün). İade satırları negatif adetlidir.
+      - name: sepet
+        description: Fiş/sepet başlığı (mağaza, zaman, müşteri, ödeme tipi).
+      - name: musteri
+        description: Sadakat kartı müşterileri (anonimleştirilmiş).
+      - name: urun
+        description: Ürün ana verisi (kategori, fiyat, hacim, ağırlık, koli içi adet).
+      - name: magaza
+        description: Mağaza ana verisi (il, ilçe, koordinat, mağaza tipi).
+      - name: dagitim_merkezi
+        description: Bölgesel dağıtım merkezi (BDM) bilgisi.
+
+  - name: dis_kaynak
+    description: Dış (açık) veri kaynakları.
+    meta:
+      external_location: "read_csv('../data/external/{name}.csv', header = true, all_varchar = true)"
+    tables:
+      - name: il_nufus_tuik
+        description: TÜİK Adrese Dayalı Nüfus Kayıt Sistemi (ADNKS) 2023 il nüfusları — Ege Bölgesi.
+      - name: magaza_mesafe_osrm
+        description: OSRM açık rota API'sinden çekilen BDM → mağaza karayolu mesafe ve süreleri.

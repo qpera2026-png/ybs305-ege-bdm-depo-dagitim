@@ -1,0 +1,18 @@
+version: 2
+
+models:
+  - name: int_satis_satirlari
+    description: Satış satırları + sepet (tarih, mağaza, müşteri) + ürün lojistik özellikleri (hacim, ağırlık, koli).
+
+  - name: int_magaza_ikmal_siparisleri
+    description: >
+      Koli bazlı ikmal varsayımıyla türetilen BDM -> mağaza sipariş satırları. Mağazanın bir üründeki
+      kümülatif satışı yeni bir koli eşiğini geçtiği gün bir ikmal (toplama) satırı oluşur.
+    data_tests:
+      - benzersiz_kombinasyon:
+          arguments:
+            columns: ['magaza_id', 'urun_id', 'tarih']
+    columns:
+      - name: ikmal_koli_sayisi
+        description: O gün toplanan koli adedi.
+        data_tests: [pozitif_deger]

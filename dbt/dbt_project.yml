@@ -1,0 +1,42 @@
+name: nova_dbt
+version: "1.0.0"
+config-version: 2
+profile: nova_dbt
+
+model-paths: ["models"]
+seed-paths: ["seeds"]
+test-paths: ["tests"]
+macro-paths: ["macros"]
+target-path: "target"
+clean-targets: ["target", "dbt_packages"]
+
+vars:
+  # NovaPerakende verisi mağaza işlemlerinin örneklemidir (sadakat kartı + örnek kasa).
+  # Dağıtım planlamasında örneklem talebi bu katsayı ile toplam talebe ölçeklenir.
+  talep_olcek_katsayisi: 20
+  # Bir sevkiyatta aracın hedeflenen azami doluluk oranı
+  hedef_doluluk: 0.85
+  # Tazelik nedeniyle mağaza başına haftalık asgari sevkiyat sayısı
+  min_haftalik_sevkiyat: 2
+  # ABC sınır değerleri (kümülatif toplama satırı payı)
+  abc_a_siniri: 0.80
+  abc_b_siniri: 0.95
+  # XYZ sınır değerleri (haftalık talebin varyasyon katsayısı)
+  xyz_x_siniri: 0.50
+  xyz_y_siniri: 1.00
+
+models:
+  nova_dbt:
+    staging:
+      +materialized: view
+      +schema: staging
+    intermediate:
+      +materialized: view
+      +schema: intermediate
+    marts:
+      +materialized: table
+      +schema: marts
+
+seeds:
+  nova_dbt:
+    +schema: referans

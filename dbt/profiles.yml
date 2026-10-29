@@ -1,0 +1,7 @@
+nova_dbt:
+  target: dev
+  outputs:
+    dev:
+      type: duckdb
+      path: "{{ env_var('NOVA_DUCKDB_PATH', 'nova.duckdb') }}"
+      threads: 4

@@ -1,0 +1,141 @@
+version: 2
+
+models:
+  - name: dim_tarih
+    description: Tarih boyutu. `tam_hafta_mi`, haftanın tamamı veri döneminde ise true'dur.
+    columns:
+      - name: tarih
+        data_tests: [unique, not_null]
+
+  - name: dim_urun
+    description: Ürün boyutu (koli hacmi/ağırlığı dahil).
+    columns:
+      - name: urun_id
+        data_tests: [unique, not_null]
+
+  - name: dim_magaza
+    description: >
+      Mağaza boyutu. TÜİK il nüfusu, OSRM karayolu mesafesi ve BDM'ye göre yön
+      (rota kümesi: Kuzey/Doğu/Güney/Batı) ile zenginleştirilmiştir.
+    columns:
+      - name: magaza_id
+        data_tests: [unique, not_null]
+      - name: mesafe_km
+        description: BDM'den mağazaya karayolu mesafesi (km).
+        data_tests: [not_null]
+      - name: rota_kumesi
+        data_tests:
+          - accepted_values:
+              arguments:
+                values: ['Kuzey Rotası', 'Doğu Rotası', 'Güney Rotası', 'Batı Rotası']
+
+  - name: fct_satis
+    description: Satış olgu tablosu (satır düzeyi) — hacim, ağırlık ve koli eşdeğeri dahil.
+    columns:
+      - name: satis_id
+        data_tests: [unique, not_null]
+      - name: magaza_id
+        data_tests:
+          - relationships:
+              arguments:
+                to: ref('dim_magaza')
+                field: magaza_id
+      - name: urun_id
+        data_tests:
+          - relationships:
+              arguments:
+                to: ref('dim_urun')
+                field: urun_id
+
+  - name: mart_urun_abc_xyz
+    description: >
+      Depo yerleşimi (slotting) tablosu. Ürünler BDM'deki toplama sıklığına göre ABC,
+      haftalık talep düzenliliğine (varyasyon katsayısı) göre XYZ sınıflarına ayrılır ve
+      `depo_yerlesim_kurallari` seed'i ile depo bölgesi / raf seviyesi önerisi alır.
+    columns:
+      - name: urun_id
+        data_tests: [unique, not_null]
+      - name: toplama_satiri_sayisi
+        description: BDM'deki toplama (pick) satırı sayısı = koli bazlı ikmal sipariş satırları (int_magaza_ikmal_siparisleri).
+      - name: toplanan_koli_sayisi
+        description: Yıl boyunca BDM'de bu ürün için toplanan koli adedi.
+      - name: varyasyon_katsayisi
+        description: Haftalık satış adedinin standart sapma / ortalaması (yalnızca tam haftalar).
+      - name: kumulatif_toplama_payi
+        description: Hız sırasına göre kümülatif toplama payı (Pareto).
+      - name: abc_sinifi
+        data_tests:
+          - not_null
+          - accepted_values:
+              arguments:
+                values: ['A', 'B', 'C']
+      - name: xyz_sinifi
+        data_tests:
+          - not_null
+          - accepted_values:
+              arguments:
+                values: ['X', 'Y', 'Z']
+      - name: coi
+        description: Cube-per-Order Index — haftalık raf hacmi (dm3) / haftalık toplama sayısı. Düşük COI rampaya yakın yerleştirilir.
+      - name: onerilen_depo_bolgesi
+        data_tests: [not_null]
+
+  - name: mart_magaza_haftalik_talep
+    description: Mağaza x hafta talep profili. `tahmini_toplam_*` kolonları örneklemi toplam talebe ölçekler.
+    data_tests:
+      - benzersiz_kombinasyon:
+          arguments:
+            columns: ['magaza_id', 'hafta_baslangic']
+    columns:
+      - name: hacim_m3
+        data_tests: [pozitif_deger]
+
+  - name: mart_dagitim_plani
+    description: >
+      Mağaza dağıtım planı: P90 haftalık talebi hedef doluluk oranıyla karşılayan en düşük
+      maliyetli araç tipi ve haftalık sevkiyat sıklığı.
+    columns:
+      - name: magaza_id
+        data_tests: [unique, not_null]
+      - name: haftalik_sevkiyat_sayisi
+        data_tests:
+          - accepted_values:
+              arguments:
+                values: [1, 2, 3, 4, 5, 6, 7]
+                quote: false
+      - name: onerilen_arac_tipi
+        data_tests:
+          - not_null
+          - relationships:
+              arguments:
+                to: ref('arac_tipleri')
+                field: arac_tipi
+      - name: ort_arac_doluluk_orani
+        description: Ortalama haftada aracın bağlayıcı (hacim veya ağırlık) kapasitesinin doluluk oranı.
+      - name: baglayici_kisit
+        description: P90 talepte aracın önce dolan kapasite boyutu.
+        data_tests:
+          - accepted_values:
+              arguments:
+                values: ['Ağırlık', 'Hacim']
+
+  - name: mart_il_talep_ozeti
+    description: İl bazında satış + TÜİK nüfusu; 10.000 kişi başına ciro ve mağaza başına nüfus.
+    columns:
+      - name: il
+        data_tests: [unique, not_null]
+
+  - name: mart_gunluk_kategori_satis
+    description: Dashboard için gün x mağaza x kategori özeti.
+
+  - name: mart_gunluk_magaza_ozet
+    description: Dashboard için gün x mağaza sepet sayısı ve ciro.
+    columns:
+      - name: sepet_sayisi
+        data_tests: [pozitif_deger]
+
+  - name: dim_dagitim_merkezi
+    description: Bölgesel dağıtım merkezi (BDM) konumu.
+    columns:
+      - name: bdm_id
+        data_tests: [unique, not_null]

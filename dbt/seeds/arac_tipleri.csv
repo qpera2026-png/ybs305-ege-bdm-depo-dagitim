@@ -1,0 +1,5 @@
+arac_tipi,hacim_kapasite_m3,agirlik_kapasite_kg,sefer_sabit_maliyet_tl,km_maliyet_tl,kucuk_magazaya_uygun
+Panelvan (3.5t),12,1500,1500,9,true
+Kamyonet (7.5t),30,3500,2500,13,true
+Kamyon (12t),45,8000,3500,17,true
+Tır (24t),90,24000,5000,24,false

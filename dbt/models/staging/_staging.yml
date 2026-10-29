@@ -1,0 +1,139 @@
+version: 2
+
+models:
+  - name: stg_nova__satis
+    description: >
+      Satış satırları. Ham CSV'deki çift aktarılmış (aynı satis_id) kayıtlar ayıklanır,
+      tipler dönüştürülür, brüt/net tutar hesaplanır.
+    columns:
+      - name: satis_id
+        description: Satış satırı anahtarı.
+        data_tests: [unique, not_null]
+      - name: sepet_id
+        description: Satırın ait olduğu sepet (fiş).
+        data_tests:
+          - not_null
+          - relationships:
+              arguments:
+                to: ref('stg_nova__sepet')
+                field: sepet_id
+      - name: urun_id
+        data_tests:
+          - not_null
+          - relationships:
+              arguments:
+                to: ref('stg_nova__urun')
+                field: urun_id
+      - name: adet
+        description: Satılan adet; iade satırlarında negatiftir.
+        data_tests: [not_null]
+      - name: islem_tipi
+        description: SATIS veya IADE.
+        data_tests:
+          - accepted_values:
+              arguments:
+                values: ['SATIS', 'IADE']
+      - name: birim_fiyat
+        data_tests: [pozitif_deger]
+      - name: brut_tutar
+        description: adet x birim_fiyat
+      - name: net_tutar
+        description: brüt tutar - indirim tutarı
+
+  - name: stg_nova__sepet
+    description: Sepet (fiş) başlıkları. Boş müşteri kimliği NULL'a çevrilir.
+    columns:
+      - name: sepet_id
+        data_tests: [unique, not_null]
+      - name: magaza_id
+        data_tests:
+          - not_null
+          - relationships:
+              arguments:
+                to: ref('stg_nova__magaza')
+                field: magaza_id
+      - name: musteri_id
+        description: Sadakat kartı yoksa NULL.
+        data_tests:
+          - relationships:
+              arguments:
+                to: ref('stg_nova__musteri')
+                field: musteri_id
+      - name: tarih
+        data_tests: [not_null]
+
+  - name: stg_nova__musteri
+    description: >
+      Anonim müşteri verisi. İl adları ("  izmir", "İZMİR" gibi) TÜİK il listesine
+      eşlenerek standartlaştırılır; doğum yılından yaş grubu türetilir.
+    columns:
+      - name: musteri_id
+        data_tests: [unique, not_null]
+      - name: il
+        description: Standartlaştırılmış il adı.
+        data_tests:
+          - relationships:
+              arguments:
+                to: ref('stg_dis__il_nufus')
+                field: il_adi
+      - name: il_ham
+        description: Kaynaktaki ham il değeri (izlenebilirlik için).
+      - name: yas_grubu
+        data_tests:
+          - accepted_values:
+              arguments:
+                values: ['18-24', '25-34', '35-49', '50-64', '65+', 'Bilinmiyor']
+
+  - name: stg_nova__urun
+    description: Ürün ana verisi ve lojistik özellikler.
+    columns:
+      - name: urun_id
+        data_tests: [unique, not_null]
+      - name: sicaklik_tipi
+        data_tests:
+          - accepted_values:
+              arguments:
+                values: ['Ortam', 'Soğuk', 'Dondurulmuş']
+      - name: birim_hacim_dm3
+        data_tests: [not_null, pozitif_deger]
+      - name: koli_ici_adet
+        data_tests: [pozitif_deger]
+
+  - name: stg_nova__magaza
+    description: Mağaza ana verisi.
+    columns:
+      - name: magaza_id
+        data_tests: [unique, not_null]
+      - name: magaza_tipi
+        data_tests:
+          - accepted_values:
+              arguments:
+                values: ['Büyük', 'Orta', 'Küçük']
+
+  - name: stg_nova__dagitim_merkezi
+    description: Bölgesel dağıtım merkezi.
+    columns:
+      - name: bdm_id
+        data_tests: [unique, not_null]
+
+  - name: stg_dis__il_nufus
+    description: TÜİK ADNKS il nüfusları (dış kaynak).
+    columns:
+      - name: il_adi
+        data_tests: [unique, not_null]
+      - name: nufus
+        data_tests: [pozitif_deger]
+
+  - name: stg_dis__magaza_mesafe
+    description: OSRM API'sinden BDM -> mağaza karayolu mesafesi (km) ve süresi (dk).
+    columns:
+      - name: magaza_id
+        data_tests:
+          - unique
+          - not_null
+          - relationships:
+              arguments:
+                to: ref('stg_nova__magaza')
+                field: magaza_id
+      - name: mesafe_km
+        data_tests: [pozitif_deger]
